@@ -166,8 +166,8 @@ def generateSrcAddrFeaturesConnectionBased(dataFrame, windowSize):
     #For any of the flow records that SRCADDRESS has appeared within the last X netflows, average the packets
     #For any of the flow records that SRCADDRESS has appeared within the last X netflows, average the bytes
     
-    additionalCol = None
-    for i in range(windowSize - 1, len(dfNew)+1):
+    additionalCol = []
+    for i in range(windowSize - 1, len(dfNew.index) + 1):
         #Feature generation feedback every 10000 generated rows
         if (i%10000 == 0):
             print(i)
@@ -175,26 +175,20 @@ def generateSrcAddrFeaturesConnectionBased(dataFrame, windowSize):
         window = dfNew[i - (windowSize-1):i+1]
         
         slice_df = countDistinctMatchingForSrcAddr(window)
-        
-        if i == windowSize - 1:
-            additionalCol = slice_df
-        else:
-            additionalCol = pd.concat([additionalCol, slice_df])
-        
-        #dfNew.loc[i, :] = slice_df
+
+        additionalCol.append(slice_df)
     
     # Set the right index
-    additionalCol = additionalCol.reset_index()
-    additionalCol.index += windowSize - 1
-    
-    dfNew = dfNew.join(additionalCol).drop(columns=['index'])
-    
+    newCol = pd.concat(additionalCol, axis=0)
+    del additionalCol
+    newCol.index = np.arange(windowSize - 1, windowSize + len(newCol) - 1)
+    dfNew = dfNew.join(newCol)
     
     #Dropping beginning rows of size: windowsize since all the generated features are null
     dfNew = deleteNullRow(dfNew, 'SrcAddr_App')
-    
+
     return dfNew
-    
+
 
 
 
