@@ -10,7 +10,8 @@ import os
 from keras.models import Sequential
 from keras.layers import Dense
 from keras.optimizers import Adam
-from sklearn import preprocessing 
+from sklearn import preprocessing
+import time
 
 
 #Deletes row's where the column values are null,nan,nat, or blank
@@ -69,7 +70,7 @@ def preprocessData(dataFrame):
 def discretizeData(dataFrame):
     
     dfNew = dataFrame
-    
+
     # Binning technique from
     # https://towardsdatascience.com/understanding-feature-engineering-part-1-continuous-numeric-data-da4e47099a7b
     quantile_list = [0, .25, .5, .75, 1.] # Change the quantile_list for more or less accuracy
@@ -109,7 +110,6 @@ def discretizeData(dataFrame):
     dfNew['LabelDisc'] = dfNew.LabelDisc.str.replace(r'(^.*Normal.*$)', '0')
     dfNew['LabelDisc'] = dfNew.LabelDisc.str.replace(r'(^.*Botnet.*$)', '1')
     
-    
     return dfNew
     
 
@@ -118,6 +118,9 @@ def discretizeData(dataFrame):
 #helper function to count the distinct values of second column
 #where SRCaddr's match in rolling window of size windowSize
 def countDistinctMatchingForSrcAddr(sliceDF):
+    if sliceDF.index[0] % 1000 == 0:
+        print(sliceDF.index[0])
+
     SrcAddr = sliceDF["SrcAddr"].iloc[-1]     #SrcAddr of the rolling window to calculate for
     DstAddr = sliceDF["DstAddr"].iloc[-1]
     
@@ -150,7 +153,13 @@ def countDistinctMatchingForSrcAddr(sliceDF):
     return returnData
 
 
+def windowGenerator(dfNew):
+    global windowSize
+    for i in range(windowSize - 1, len(dfNew.index) + 1):
+        yield dfNew[i - (windowSize-1):i+1]
 
+import multiprocessing as mp
+pool = mp.Pool(processes=mp.cpu_count())
 #Function to generate connection based features for the source address
 def generateSrcAddrFeaturesConnectionBased(dataFrame, windowSize):
     
@@ -166,24 +175,13 @@ def generateSrcAddrFeaturesConnectionBased(dataFrame, windowSize):
     #For any of the flow records that SRCADDRESS has appeared within the last X netflows, average the packets
     #For any of the flow records that SRCADDRESS has appeared within the last X netflows, average the bytes
     
-    additionalCol = []
-    for i in range(windowSize - 1, len(dfNew.index) + 1):
-        #Feature generation feedback every 10000 generated rows
-        if (i%10000 == 0):
-            print(i)
-
-        window = dfNew[i - (windowSize-1):i+1]
-        
-        slice_df = countDistinctMatchingForSrcAddr(window)
-
-        additionalCol.append(slice_df)
+    additionalCol = list(pool.imap(countDistinctMatchingForSrcAddr, windowGenerator(dfNew), chunksize=100))
     
     # Set the right index
     newCol = pd.concat(additionalCol, axis=0)
     del additionalCol
     newCol.index = np.arange(windowSize - 1, windowSize + len(newCol) - 1)
-    dfNew = dfNew.join(newCol)
-    
+    dfNew = dfNew.join(newCol, how="inner")
     #Dropping beginning rows of size: windowsize since all the generated features are null
     dfNew = deleteNullRow(dfNew, 'SrcAddr_App')
 
@@ -196,6 +194,7 @@ def generateSrcAddrFeaturesConnectionBased(dataFrame, windowSize):
 #Getting all .csv files(local directory) to be feature generated
 localFiles = [file for file in os.listdir('.') if file.endswith(".csv")]
 
+windowSize = 10000
 #Perform preprocessing, discretizing, and feature generation on each file seperately
 for file in localFiles:
     print("Reading file: "+file)
@@ -206,10 +205,15 @@ for file in localFiles:
 
     print("Discretizing file: "+file)
     dataFrame = discretizeData(dataFrame)
-
+    print("\n----------After pre-discretizing-----------")
+    print("Number of rows: " + str(len(dataFrame.index)))
+    print("The columns are: " + str(list(dataFrame)))
+    
     print("Feature generating file: "+file)
+    now = time.time()
     #Window size 10,000
-    dataFrame = generateSrcAddrFeaturesConnectionBased(dataFrame,10000)
-    dataframeOutName = file[:-4] + "FeatureGenerated.csv"
+    dataFrame = generateSrcAddrFeaturesConnectionBased(dataFrame, windowSize)
+    dataframeOutName = "Output/" + file[:-4] + "FeatureGenerated.csv"
     dataFrame.to_csv(dataframeOutName, encoding='utf-8', index=False)
     print(dataframeOutName + " Created \n\n\n")
+    print("Running duration: " + str(time.time() - now))
