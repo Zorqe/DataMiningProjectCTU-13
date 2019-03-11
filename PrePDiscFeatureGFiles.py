@@ -10,7 +10,8 @@ import os
 from keras.models import Sequential
 from keras.layers import Dense
 from keras.optimizers import Adam
-from sklearn import preprocessing 
+from sklearn import preprocessing
+import time
 
 
 #Deletes row's where the column values are null,nan,nat, or blank
@@ -209,7 +210,9 @@ for file in localFiles:
 
     print("Feature generating file: "+file)
     #Window size 10,000
+    now = time.time()
     dataFrame = generateSrcAddrFeaturesConnectionBased(dataFrame,10000)
     dataframeOutName = file[:-4] + "FeatureGenerated.csv"
     dataFrame.to_csv(dataframeOutName, encoding='utf-8', index=False)
     print(dataframeOutName + " Created \n\n\n")
+    print("Running duration: " + str(time.time() - now))
