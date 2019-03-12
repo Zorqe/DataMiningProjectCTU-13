@@ -12,6 +12,7 @@ from keras.layers import Dense
 from keras.optimizers import Adam
 from sklearn import preprocessing
 import time
+from pathlib import Path
 
 
 #Deletes row's where the column values are null,nan,nat, or blank
@@ -212,7 +213,12 @@ for file in localFiles:
     #Window size 10,000
     now = time.time()
     dataFrame = generateSrcAddrFeaturesConnectionBased(dataFrame,10000)
+
+    dataFrameOutDir = Path("Output")
+    dataFrameOutDir.mkdir(parents=True, exist_ok=True)
+    
     dataframeOutName = file[:-4] + "FeatureGenerated.csv"
-    dataFrame.to_csv(dataframeOutName, encoding='utf-8', index=False)
+
+    dataFrame.to_csv(dataFrameOutDir / dataframeOutName, encoding='utf-8', index=False)
     print(dataframeOutName + " Created \n\n\n")
     print("Running duration: " + str(time.time() - now))
