@@ -13,6 +13,7 @@ from keras.optimizers import Adam
 from sklearn import preprocessing
 import time
 from pathlib import Path
+from sklearn.preprocessing import LabelEncoder
 
 
 #Deletes row's where the column values are null,nan,nat, or blank
@@ -192,6 +193,27 @@ def generateSrcAddrFeaturesConnectionBased(dataFrame, windowSize):
     return dfNew
 
 
+#Function to further adjust generated features and label encode them
+def adjustFeatures(df):
+    #Ensuring valid entries in Sport and Dport
+    df['Sport']=pd.to_numeric(df['Sport'], errors='coerce')
+    df['Dport']=pd.to_numeric(df['Dport'], errors='coerce')
+
+    #Removing invalid entries that've been converted to NaN
+    df = deleteNullRow(df,'Sport')
+    df = deleteNullRow(df,'Sport')
+
+    stringColsToMap = ['State','TotBytesDisc','SrcBytesDisc','SportDisc','DportDisc','Src_TotBytesDisc_mode','Dst_TotBytesDisc_mode']
+    for col in stringColsToMap:
+        LE = LabelEncoder()
+        df[col] = LE.fit_transform(df[col])
+
+
+    #Drop the original cols which have already been label encoded
+    colsAlreadyLabelEncoded = ['Label','Proto']
+    df = df.drop(colsAlreadyLabelEncoded, axis=1)
+
+    return df
 
 
 #Have all files to clean,discretize,featuregenerate in local directory
@@ -213,6 +235,7 @@ for file in localFiles:
     #Window size 10,000
     now = time.time()
     dataFrame = generateSrcAddrFeaturesConnectionBased(dataFrame,10000)
+    dataFrame = adjustFeatures(dataFrame)
 
     dataFrameOutDir = Path("Output")
     dataFrameOutDir.mkdir(parents=True, exist_ok=True)
