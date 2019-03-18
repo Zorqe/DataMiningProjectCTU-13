@@ -10,9 +10,9 @@ from sklearn.metrics import accuracy_score
 
 
 #--------------------TEMPORARY----------------------
-dataFrame = pd.read_csv('capture20110815-2FeatureGenerated.csv')
-dataFrameTrain = dataFrame[50:]
-dataFrameTest = dataFrame[0:50]
+dataFrame = pd.read_csv('testing100000RowsFeatureGenerated.csv')
+dataFrameTrain = dataFrame[0:85000]
+dataFrameTest = dataFrame[85000:]
 
 
 #Mapping taken from tutorial https://www.kaggle.com/parasjindal96/how-to-normalize-dataframe-pandas
@@ -31,6 +31,10 @@ def mapping(data,feature):
 def normalizeData(dfTrain):
     stringColsToMap = ['Sport','Dport','TotBytesDisc','SrcBytesDisc','SportDisc','DportDisc','Src_TotBytesDisc_mode','Dst_TotBytesDisc_mode']
     
+    dfTrain['Sport']=pd.to_numeric(dfTrain['Sport'], errors='coerce')
+    dfTrain['Dport']=pd.to_numeric(dfTrain['Dport'], errors='coerce')
+
+
     for col in stringColsToMap:
         dfTrain = mapping(dfTrain,col)
 
@@ -59,14 +63,14 @@ def knnPredict(k, dataFrameTest,dataFrameTrain):
 
 
 #Drop all columns which we won't use for training data, instead use their discretized values
-dataFrameTrain = dataFrameTrain.drop(['StartTime','SrcAddr','DstAddr','State','Label','Proto'], axis=1)
-dataFrameTest = dataFrameTest.drop(['StartTime','SrcAddr','DstAddr','State','Label','Proto'], axis=1)
+dataFrameTrain = dataFrameTrain.drop(['StartTime','SrcAddr','DstAddr','State','Label','Proto','SrcAddr_App','SrcDst_Sport_unique'], axis=1)
+dataFrameTest = dataFrameTest.drop(['StartTime','SrcAddr','DstAddr','State','Label','Proto','SrcAddr_App','SrcDst_Sport_unique'], axis=1)
 
 dataFrameTrain = normalizeData(dataFrameTrain)
 dataFrameTest = normalizeData(dataFrameTest)
 
 #Predicting using the KNN model
-k = 5
+k = 1
 print("\nPredicting values with k value: " + str(k))
 predictions = knnPredict(k, dataFrameTest, dataFrameTrain)
 
@@ -75,3 +79,5 @@ print("The predicted discretized labels are: \n"+ str(predictions))
 #Calculating the accuracy
 accuracy =  accuracy_score(dataFrameTest['LabelDisc'], predictions) *100
 print ("The accuracy is: " + str(accuracy)+"%")
+
+print(str(set(predictions)))
