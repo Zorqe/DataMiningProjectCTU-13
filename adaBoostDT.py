@@ -79,17 +79,25 @@ print("Predicting...")
 prediction = model.predict(test_features)
 
 print("Set of predictions are: " + str(set(prediction)) )
-print("The count of malicious predictions are: "  + str( np.count_nonzero(prediction == 1) )  )
-print("The count of background predictions are: "  + str( np.count_nonzero(prediction == 0) )  )
 
+countMaliciousPredicted = np.count_nonzero(prediction == 1)
+countBackgroundPredicted = np.count_nonzero(prediction == 0)
+print("The count of malicious predictions are: "  + str( countMaliciousPredicted )  )
+print("The count of background predictions are: "  + str( countBackgroundPredicted )  )
 
 print ('\nAccuracy = {:0.2f}%'.format(100.0 * accuracy_score(test_results, prediction)))
 
 correctlyClassified = 0
+correctlyClassifiedBackground = 0
 index = 0
 for classification in list(test_dataFrame_Classification.LabelDisc):
     if prediction[index] == classification and classification == 1:
         correctlyClassified += 1
+    elif prediction[index] == classification and classification == 0:
+        correctlyClassifiedBackground += 1
     index += 1
 
 print("The number of correctly classified malicious predictions are: " + str(correctlyClassified))
+
+print("The precision on malicious data classification is: {:0.2f}%\n".format( (correctlyClassified/countMaliciousPredicted)*100))
+print("The precision on benign data classification is: {:0.2f}%\n".format( (correctlyClassifiedBackground/countBackgroundPredicted)*100))

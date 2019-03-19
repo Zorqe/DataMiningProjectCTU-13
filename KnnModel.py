@@ -11,8 +11,8 @@ from sklearn.metrics import accuracy_score
 #--------------------TEMPORARY----------------------
 dataFrame = pd.read_csv('capture20110818ResampledFeatureGenerated.csv')
 
-dataFrameTrain = dataFrame[0:390000]
-dataFrameTest = dataFrame[390000:]
+dataFrameTrain = dataFrame[0:375000]
+dataFrameTest = dataFrame[375000:]
 
 
 #Mapping taken from tutorial https://www.kaggle.com/parasjindal96/how-to-normalize-dataframe-pandas
@@ -61,23 +61,32 @@ dataFrameTrain = normalizeData(dataFrameTrain)
 dataFrameTest = normalizeData(dataFrameTest)
 
 #Predicting using the KNN model
-k = 1
+k = 5
 print("\nPredicting values with k value: " + str(k))
 predictions = knnPredict(k, dataFrameTest, dataFrameTrain)
 
-print("Set of predictions are: " + str(set(predictions)) )
-print("The count of malicious predictions are: "  + str( np.count_nonzero(predictions == 15.0) )  )
-print("The count of background predictions are: "  + str( np.count_nonzero(predictions == 0.0) )  )
+countMaliciousPredicted = np.count_nonzero(predictions == 15.0)
+countBackgroundPredicted = np.count_nonzero(predictions == 0.0)
+
+print("The count of malicious predictions are: "  + str( countMaliciousPredicted )  )
+print("The count of background predictions are: "  + str( countBackgroundPredicted )  )
 
 #Calculating the accuracy
 accuracy =  accuracy_score(dataFrameTest['LabelDisc'], predictions) *100
 print ("The accuracy is: " + str(accuracy)+"%")
 
 correctlyClassified = 0
+correctlyClassifiedBackground = 0
 index = 0
 for classification in list(dataFrameTest.LabelDisc):
     if predictions[index] == classification and classification == 15.0:
         correctlyClassified += 1
+    elif predictions[index] == classification and classification == 0.0:
+        correctlyClassifiedBackground += 1
     index += 1
 
 print("The number of correctly classified malicious predictions are: " + str(correctlyClassified))
+
+
+print("The precision on malicious data classification is: {:0.2f}%\n".format( (correctlyClassified/countMaliciousPredicted)*100))
+print("The precision on benign data classification is: {:0.2f}%\n".format( (correctlyClassifiedBackground/countBackgroundPredicted)*100))
