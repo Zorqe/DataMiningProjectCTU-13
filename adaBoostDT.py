@@ -16,11 +16,11 @@ model = AdaBoostClassifier(RandomForestClassifier(n_estimators = 1000),
                         algorithm="SAMME",
                         n_estimators=500)
 
-dataFrame = pd.read_csv('capture20110818ResampledFeatureGenerated.csv')
+dataFrame = pd.read_csv('capture20110818ResampledFeatureGeneratedNewFeatureGenerated.csv')
 test_dataFrame = dataFrame[375000:]
 
 #Dropping values that weren't trained on
-test_dataFrame = test_dataFrame.drop(['StartTime','SrcAddr','DstAddr','State'], axis=1)
+test_dataFrame = test_dataFrame.drop(['StartTime','SrcAddr','DstAddr'], axis=1)
 
 #Splitting up the test dataframe into one with only features, other with classifications
 test_dataFrame_Classification = test_dataFrame[['LabelDisc']].copy()
@@ -39,7 +39,7 @@ if not(os.path.exists("adaBoostModel.pkl")):
     train_dataFrame = dataFrame[0:375000]
 
     #Drop columns to not train on
-    train_dataFrame = train_dataFrame.drop(['StartTime','SrcAddr','DstAddr','State'], axis=1)
+    train_dataFrame = train_dataFrame.drop(['StartTime','SrcAddr','DstAddr'], axis=1)
 
     train_dataframe_Classification = train_dataFrame[['LabelDisc']].copy()
     train_dataFrame = train_dataFrame.drop(['LabelDisc'], axis=1)
