@@ -16,8 +16,7 @@ model = AdaBoostClassifier(RandomForestClassifier(n_estimators = 1000),
                         algorithm="SAMME",
                         n_estimators=500)
 
-dataFrame = pd.read_csv('capture20110818ResampledFeatureGeneratedNewFeatureGenerated.csv')
-test_dataFrame = dataFrame[375000:]
+test_dataFrame = pd.read_csv('testDataCombinedCaptureNewFeatureGenerated.csv')
 
 #Dropping values that weren't trained on
 test_dataFrame = test_dataFrame.drop(['StartTime','SrcAddr','DstAddr'], axis=1)
@@ -36,9 +35,13 @@ test_results = test_data_results[0::,0]
 #Model doesn't exist so make model and then save it
 if not(os.path.exists("adaBoostModel.pkl")):
 
-    train_dataFrame = dataFrame[0:375000]
+    print("\nNo previous model exists, loading training data...")
+
+    train_dataFrame = pd.read_csv('trainDataCombinedCaptureNewFeatureGenerated.csv')
 
     #Drop columns to not train on
+    print("Dropping columns not required for training...")
+
     train_dataFrame = train_dataFrame.drop(['StartTime','SrcAddr','DstAddr'], axis=1)
 
     train_dataframe_Classification = train_dataFrame[['LabelDisc']].copy()
@@ -82,6 +85,9 @@ print("Set of predictions are: " + str(set(prediction)) )
 
 countMaliciousPredicted = np.count_nonzero(prediction == 1)
 countBackgroundPredicted = np.count_nonzero(prediction == 0)
+
+totalMalicious = np.count_nonzero(test_dataFrame_Classification['LabelDisc'] == 1)
+
 print("The count of malicious predictions are: "  + str( countMaliciousPredicted )  )
 print("The count of background predictions are: "  + str( countBackgroundPredicted )  )
 
@@ -100,4 +106,6 @@ for classification in list(test_dataFrame_Classification.LabelDisc):
 print("The number of correctly classified malicious predictions are: " + str(correctlyClassified))
 
 print("The precision on malicious data classification is: {:0.2f}%\n".format( (correctlyClassified/countMaliciousPredicted)*100))
+print("The recall on malicious data classification is: {:0.2f}%\n".format( (correctlyClassified/totalMalicious)*100))
+
 print("The precision on benign data classification is: {:0.2f}%\n".format( (correctlyClassifiedBackground/countBackgroundPredicted)*100))
