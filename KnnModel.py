@@ -3,16 +3,9 @@ import numpy as np
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import accuracy_score
 
-#Train dataset to use for classification
-#dataFrameTrain = pd.read_csv('trainDataSetFeatureGenerated.csv')
-#dataFrameToPredict = pd.read_csv('trainDataSetFeatureGenerated.csv')
 
-
-#--------------------TEMPORARY----------------------
-dataFrame = pd.read_csv('capture20110818ResampledFeatureGenerated.csv')
-
-dataFrameTrain = dataFrame[0:375000]
-dataFrameTest = dataFrame[375000:]
+dataFrameTrain = pd.read_csv('trainDataCombinedCaptureNewFeatureGenerated.csv')
+dataFrameTest = pd.read_csv('testDataCombinedCaptureNewFeatureGenerated.csv')
 
 
 #Mapping taken from tutorial https://www.kaggle.com/parasjindal96/how-to-normalize-dataframe-pandas
@@ -54,8 +47,13 @@ def knnPredict(k, dataFrameTest,dataFrameTrain):
 
 
 #Drop all columns which we won't use for training data, instead use their discretized values
-dataFrameTrain = dataFrameTrain.drop(['StartTime','SrcAddr','DstAddr','State','SrcAddr_App','SrcDst_Sport_unique'], axis=1)
-dataFrameTest = dataFrameTest.drop(['StartTime','SrcAddr','DstAddr','State','SrcAddr_App','SrcDst_Sport_unique'], axis=1)
+
+print("Dropping cols to not train on")
+
+dataFrameTrain = dataFrameTrain.drop(['StartTime','SrcAddr','DstAddr','SrcAddr_App','SrcDst_Sport_unique'], axis=1)
+dataFrameTest = dataFrameTest.drop(['StartTime','SrcAddr','DstAddr','SrcAddr_App','SrcDst_Sport_unique'], axis=1)
+
+print("Normalizing data")
 
 dataFrameTrain = normalizeData(dataFrameTrain)
 dataFrameTest = normalizeData(dataFrameTest)
@@ -67,6 +65,8 @@ predictions = knnPredict(k, dataFrameTest, dataFrameTrain)
 
 countMaliciousPredicted = np.count_nonzero(predictions == 15.0)
 countBackgroundPredicted = np.count_nonzero(predictions == 0.0)
+
+totalMalicious = np.count_nonzero(dataFrameTest['LabelDisc'] == 1)
 
 print("The count of malicious predictions are: "  + str( countMaliciousPredicted )  )
 print("The count of background predictions are: "  + str( countBackgroundPredicted )  )
@@ -89,4 +89,6 @@ print("The number of correctly classified malicious predictions are: " + str(cor
 
 
 print("The precision on malicious data classification is: {:0.2f}%\n".format( (correctlyClassified/countMaliciousPredicted)*100))
+print("The recall on malicious data classification is: {:0.2f}%\n".format( (correctlyClassified/totalMalicious)*100))
+
 print("The precision on benign data classification is: {:0.2f}%\n".format( (correctlyClassifiedBackground/countBackgroundPredicted)*100))
