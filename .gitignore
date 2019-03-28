@@ -1,3 +1,5 @@
+.vscode/*
+
 CTU-13-Dataset/
 .ipynb_checkpoints/
 combinedCapture.csv
