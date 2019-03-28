@@ -26,7 +26,7 @@ def deleteNullRow(dataFrame, column):
     return newDataFrame
 
 
-# From: https://github.com/mgarzon/cybersec/blob/master/MalwareDetection.ipynb
+# Partially inspired from: https://github.com/mgarzon/cybersec/blob/master/MalwareDetection.ipynb
 def preprocessData(dataFrame):
 
     '''
@@ -71,6 +71,10 @@ def preprocessData(dataFrame):
 #Function to perform discretization on the data
 def discretizeData(dataFrame):
     
+    '''
+    This function is used discretize the data
+    '''
+
     dfNew = dataFrame
     
     # Binning technique from
@@ -121,6 +125,11 @@ def discretizeData(dataFrame):
 #helper function to count the distinct values of second column
 #where SRCaddr's match in rolling window of size windowSize
 def countDistinctMatchingForSrcAddr(sliceDF):
+    
+    '''
+    This function is a helper function to perform the custom rolling window tasks
+    '''
+    
     SrcAddr = sliceDF["SrcAddr"].iloc[-1]     #SrcAddr of the rolling window to calculate for
     DstAddr = sliceDF["DstAddr"].iloc[-1]
     
@@ -131,7 +140,7 @@ def countDistinctMatchingForSrcAddr(sliceDF):
     srcAndDestRows = srcAddrRows[srcAddrRows.DstAddr == DstAddr]
     
     # SrcAddr statistics
-    returnData["SrcAddr_App"] = [srcAddrRows.shape[0]]   #counting total SRCAddr matches
+    returnData["SrcAddr_App"] = [srcAddrRows.shape[0]]   #counting total SrcAddr matches
     returnData["Src_Dport_unique"] =  srcAddrRows.Dport.nunique() #only counting distinct dports by using set
     returnData["Src_DstAddr_unique"] =  srcAddrRows.DstAddr.nunique()
     returnData["Src_Sport_unique"] =  srcAddrRows.Sport.nunique()
@@ -139,7 +148,7 @@ def countDistinctMatchingForSrcAddr(sliceDF):
     returnData["Src_TotBytesDisc_mode"] = srcAddrRows.TotBytesDisc.mode() # not quite mean but close enough
     
     # DstAddr statistics
-    returnData["DstAddr_App"] = [destAddrRows.shape[0]]   #counting total SRCAddr matches
+    returnData["DstAddr_App"] = [destAddrRows.shape[0]]   #counting total DstAddr matches
     returnData["Dst_Dport_unique"] =  destAddrRows.Dport.nunique()
     returnData["Dst_SrcAddr_unique"] =  destAddrRows.SrcAddr.nunique()
     returnData["Dst_Sport_unique"] =  destAddrRows.Sport.nunique()
@@ -193,7 +202,7 @@ def generateSrcAddrFeaturesConnectionBased(dataFrame, windowSize):
     return dfNew
 
 
-#Function to further adjust generated features and label encode them
+#Adjustment Function to further adjust generated features and label encode them to ensure consistency and good data
 def adjustFeatures(df):
     #Ensuring valid entries in Sport and Dport
     df['Sport']=pd.to_numeric(df['Sport'], errors='coerce')
@@ -242,6 +251,7 @@ for file in localFiles:
     
     dataframeOutName = file[:-4] + "FeatureGenerated.csv"
 
+    #File outputting
     dataFrame.to_csv(dataFrameOutDir / dataframeOutName, encoding='utf-8', index=False)
     print(dataframeOutName + " Created \n\n\n")
     print("Running duration: " + str(time.time() - now))

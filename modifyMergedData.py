@@ -6,7 +6,8 @@ from sklearn.preprocessing import LabelEncoder
 from pathlib import Path
 
 """
-    Script to slightly adjust the label encoded features to properly encode them consider the entire data
+    Script to slightly adjust the label encoded features to properly encode them considering the entire data
+    Allows for a fix from locally encoded values to globally encoding the values
 """
 
 localFiles = [file for file in os.listdir('.') if file.endswith(".csv")]

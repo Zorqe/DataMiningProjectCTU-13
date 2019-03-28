@@ -4,9 +4,10 @@ import math
 from pathlib import Path
 
 """
-This script will take all raw data Files and resample them to a ratio of:
-13-87 : Malicious-Normal
-All Botnet(malicious) rows will be kept
+This script will take all raw data Files and resample them as follows:
+If first botnet at >20k then take 20k background rows behind botnet
+Then take every background row between 2 botnet rows is the botnet rows <20k apart
+If botnet rows >20k apart then take the botnet row and previous 20k background rows
 
 Place script in local dir
 """
