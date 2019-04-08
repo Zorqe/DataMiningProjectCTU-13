@@ -4,6 +4,7 @@ from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier,
 from sklearn.svm import SVC
 from sklearn.metrics import accuracy_score
 from sklearn.preprocessing import LabelEncoder
+from sklearn.metrics import classification_report
 import os
 import pickle
 
@@ -81,7 +82,6 @@ print("Predicting...")
 
 prediction = model.predict(test_features)
 
-print("Set of predictions are: " + str(set(prediction)) )
 
 countMaliciousPredicted = np.count_nonzero(prediction == 1)
 countBackgroundPredicted = np.count_nonzero(prediction == 0)
@@ -109,3 +109,8 @@ print("The precision on malicious data classification is: {:0.2f}%\n".format( (c
 print("The recall on malicious data classification is: {:0.2f}%\n".format( (correctlyClassified/totalMalicious)*100))
 
 print("The precision on benign data classification is: {:0.2f}%\n".format( (correctlyClassifiedBackground/countBackgroundPredicted)*100))
+
+
+
+print("Scikit-learn classification report: ")
+print(classification_report(test_dataFrame_Classification.LabelDisc, prediction))  
