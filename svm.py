@@ -1,6 +1,7 @@
 import pandas as pd
 from sklearn.metrics import classification_report
 from sklearn.svm import SVC 
+from sklearn.svm import LinearSVC
 from sklearn.metrics import accuracy_score
 import os
 import pickle
@@ -13,11 +14,15 @@ test_dataFrame = pd.read_csv('testDataCombinedCaptureNewFeatureGenerated.csv')
 test_dataFrame = test_dataFrame.drop(['StartTime','SrcAddr','DstAddr'], axis=1)
 
 #Splitting test set from it's class
-X_test = test_dataFrame.drop('LabelDisc', axis=1)  
+X_test = test_dataFrame.drop('LabelDisc', axis=1)
+test_data = X_test.values
+test_features = test_data[0::]
+
+
 Y_test = test_dataFrame['LabelDisc']
 
 #Stating support vector machine classifier type
-svclassifier = SVC(kernel='linear')
+svclassifier = LinearSVC()
 #svclassifier = SVC(kernel='poly')      #Polyclassifier uncomment
 
 #Model doesn't exist so make model and then save it
@@ -32,11 +37,20 @@ if not(os.path.exists("svmLinear.pkl")):
     #Guide by https://stackabuse.com/implementing-svm-and-kernel-svm-with-pythons-scikit-learn/
 
     X = train_dataFrame.drop('LabelDisc', axis=1)  
-    Y = train_dataFrame['LabelDisc'] 
+    Y = train_dataFrame[['LabelDisc']].copy()
+
+    #-------Training--------
+    #Getting the values for the data frame as well as the results (0 normal, 1 malicious)
+    train_data = X.values
+    train_data_labels = Y.values
+
+    #Storing the features to use in model as well as the classifications
+    train_features = train_data[0::]
+    train_result = train_data_labels[0::,0]
 
     print("Model training...")
     #Training classifier
-    svclassifier.fit(X, Y)
+    svclassifier.fit(train_features, train_result)
 
     #Save the model
     model_filename = "svmLinear.pkl"
@@ -57,7 +71,7 @@ else:
 
 #Predicting for the test dataset
 print("Predicting classes for test data...")
-y_pred = svclassifier.predict(X_test)
+y_pred = svclassifier.predict(test_features)
 
 
 
