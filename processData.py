@@ -1,21 +1,22 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
 import os
-
-from keras.models import Sequential
-from keras.layers import Dense
-from keras.optimizers import Adam
-from sklearn import preprocessing
 import time
 from pathlib import Path
+from sklearn import preprocessing
 from sklearn.preprocessing import LabelEncoder
 
 
+"""
+Input: All 13 binetflow CSV files for the CTU-13 Dataset (Local directory)
+Output: Two files, the processed training data, and the processed testing data (Output directory)
+
+Script to perform preprocessing on all 13 CSV files, then discretization, followed by feature generation
+The final feature generated files are then merged as follows, training (scenario 1-8 and 11-13) and testing (scenario 9-10)
+The merged files are the two final outputs provided by this script
+"""
+
+#------------------------------- Functions -----------------------------------------
 #Deletes row's where the column values are null,nan,nat, or blank
 def deleteNullRow(dataFrame, column):
     newDataFrame = dataFrame
@@ -67,8 +68,7 @@ def preprocessData(dataFrame):
     print("The columns are: " + str(list(dataFrame)))
     return dataFrame
 
-
-#Function to perform discretization on the data
+    #Function to perform discretization on the data
 def discretizeData(dataFrame):
     
     '''
@@ -118,8 +118,6 @@ def discretizeData(dataFrame):
     
     
     return dfNew
-    
-
 
 
 #helper function to count the distinct values of second column
@@ -224,13 +222,49 @@ def adjustFeatures(df):
 
     return df
 
+#Adjust merged data to maintain common quantile list ranges
+def modifyMergedData(dataf):
+    dataFrame = dataf
+    #Drop all previous incorrectly computed columns
+    #Note: State is dropped and not recomputed --> Is not used for training
+    colsToDrop = ["State","TotBytesDisc","SrcBytesDisc","SportDisc","SportDisc","DportDisc","Src_TotBytesDisc_mode","Dst_TotBytesDisc_mode"]
+
+    dataFrame.drop(colsToDrop, axis=1, inplace=True)
+
+    quantile_list = [0, .25, .5, .75, 1.] # Change the quantile_list for more or less accuracy
+
+    dataFrame['TotBytesDisc'] = ""
+    dataFrame['SrcBytesDisc'] = ""
+    dataFrame['TotBytesDisc'] = pd.qcut(dataFrame['TotBytes'], quantile_list)
+    dataFrame['SrcBytesDisc'] = pd.qcut(dataFrame['SrcBytes'], quantile_list)
+
+    #Label encode discretized byte vals
+    le = preprocessing.LabelEncoder()
+    le.fit(dataFrame.TotBytesDisc.unique())
+    dataFrame.TotBytesDisc = le.transform(dataFrame.TotBytesDisc)
+
+    le = preprocessing.LabelEncoder()
+    le.fit(dataFrame.SrcBytesDisc.unique())
+    dataFrame.SrcBytesDisc = le.transform(dataFrame.SrcBytesDisc)
+
+    dataFrame['SportDisc'] = ""
+    dataFrame['DportDisc'] = ""
+
+    dataFrame['SportDisc'] = pd.cut(dataFrame['Sport'],[0,1023,49151,65535],labels=[0,1,2])
+    dataFrame['DportDisc'] = pd.cut(dataFrame['Dport'],[0,1023,49151,65535],labels=[0,1,2])
+
+    return dataFrame
 
 #Have all files to clean,discretize,featuregenerate in local directory
 #Getting all .csv files(local directory) to be feature generated
 localFiles = [file for file in os.listdir('.') if file.endswith(".csv")]
+testingIndex1 = localFiles.index("capture20110817.csv")        #index of testing scenario 9
+testingIndex2 = localFiles.index("capture20110818.csv")        #index of testing scenario 10
 
 #Perform preprocessing, discretizing, and feature generation on each file seperately
-for file in localFiles:
+processedDataTraining = []
+processedDataTesting = []
+for scenarioNum,file in enumerate(localFiles):
     print("Reading file: "+file)
     dataFrame = pd.read_csv(file)
 
@@ -246,12 +280,34 @@ for file in localFiles:
     dataFrame = generateSrcAddrFeaturesConnectionBased(dataFrame,10000)
     dataFrame = adjustFeatures(dataFrame)
 
-    dataFrameOutDir = Path("Output")
-    dataFrameOutDir.mkdir(parents=True, exist_ok=True)
-    
-    dataframeOutName = file[:-4] + "FeatureGenerated.csv"
+    if ( (scenarioNum != testingIndex1) and (scenarioNum != testingIndex2) ):
+        #Training set
+        processedDataTraining.append(dataFrame)
+    else:
+        #Testing set
+        processedDataTesting.append(dataFrame)
 
-    #File outputting
-    dataFrame.to_csv(dataFrameOutDir / dataframeOutName, encoding='utf-8', index=False)
-    print(dataframeOutName + " Created \n\n\n")
-    print("Running duration: " + str(time.time() - now))
+#Merge the data as follows
+#Training: scenario 1 to 8 and 11 to 13
+#Testing: scenario 9 to 10
+print("Merging scenarios into train and test sets...")
+dfOutTraining = pd.concat(processedDataTraining)
+dfOutTesting = pd.concat(processedDataTesting)
+
+#Final adjustment on merged data to allow for a common quantile scale
+print("Adjusting merged data")
+dfOutTraining = modifyMergedData(dfOutTraining)
+dfOutTesting = modifyMergedData(dfOutTesting)
+
+#--------------------Outputting files--------------------------
+dataFrameOutDir = Path("Output")
+dataFrameOutDir.mkdir(parents=True, exist_ok=True)
+
+dataframeOutNameTrain = "finalTrainingData.csv"
+dataframeOutNameTest = "finalTestingData.csv"
+
+dfOutTraining.to_csv(dataFrameOutDir / dataframeOutNameTrain, encoding='utf-8', index=False)
+print(dataframeOutNameTrain + " Created")
+
+dfOutTesting.to_csv(dataFrameOutDir / dataframeOutNameTest, encoding='utf-8', index=False)
+print(dataframeOutNameTest + " Created")
