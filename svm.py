@@ -1,6 +1,5 @@
 import pandas as pd
 from sklearn.metrics import classification_report
-from sklearn.svm import SVC 
 from sklearn.svm import LinearSVC
 from sklearn.metrics import accuracy_score
 import os
@@ -22,7 +21,7 @@ test_features = test_data[0::]
 Y_test = test_dataFrame['LabelDisc']
 
 #Stating support vector machine classifier type
-svclassifier = LinearSVC()
+svclassifier = LinearSVC(max_iter=10000)
 #svclassifier = SVC(kernel='poly')      #Polyclassifier uncomment
 
 #Model doesn't exist so make model and then save it
