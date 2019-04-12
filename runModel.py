@@ -17,7 +17,7 @@ After predicting the classes for the test data the classification reports are pr
 #Load the testing dataframe
 print("Loading testing data...")
 
-test_dataFrame = pd.read_csv('finalTestingData.csv')
+test_dataFrame = pd.read_csv('Output/finalTestingData.csv')
 
 #Dropping values that weren't trained on
 test_dataFrame = test_dataFrame.drop(['StartTime','SrcAddr','DstAddr'], axis=1)
@@ -34,7 +34,8 @@ test_features = test_data[0::]
 test_results = test_data_class[0::,0]
 
 #Testing
-modelFileNames = ["adaBoostModel.pkl","LinearSVCModel.pkl"]
+modelsFolder = "Models"
+modelFileNames = [modelsFolder + "/" + file for file in os.listdir(modelsFolder) if file.endswith(".pkl")]
 
 model = None
 for model_filename in modelFileNames:
