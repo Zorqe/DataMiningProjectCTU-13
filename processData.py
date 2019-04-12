@@ -49,7 +49,8 @@ def preprocessData(dataFrame):
     'Dir',
     'sTos',
     'dTos']
-    dataFrame = dataFrame.drop(listOfFeaturesToDrop, axis=1)
+    # Ignore columns that might not exist (ex. UNB dataset)
+    dataFrame = dataFrame.drop(listOfFeaturesToDrop, axis=1, errors="ignore")
 
     #Dropping all null value rows from specified columns
     dataFrame = deleteNullRow(dataFrame,'Sport')
@@ -83,8 +84,8 @@ def discretizeData(dataFrame):
     
     dfNew['TotBytesDisc'] = ""
     dfNew['SrcBytesDisc'] = ""
-    dfNew['TotBytesDisc'] = pd.qcut(dataFrame['TotBytes'], quantile_list)
-    dfNew['SrcBytesDisc'] = pd.qcut(dataFrame['SrcBytes'], quantile_list)
+    dfNew['TotBytesDisc'] = pd.qcut(dataFrame['TotBytes'], quantile_list, duplicates='drop')
+    dfNew['SrcBytesDisc'] = pd.qcut(dataFrame['SrcBytes'], quantile_list, duplicates='drop')
     
     # Bin Src/Dest port
     # According to 0-1023(WELLKNOWN_PORTNUMBER)
@@ -112,9 +113,9 @@ def discretizeData(dataFrame):
     #0 = Background/Normal             1=Botnet
     dfNew["LabelDisc"] = ""
     dfNew['LabelDisc'] = dfNew['Label']
-    dfNew['LabelDisc'] = dfNew.LabelDisc.str.replace(r'(^.*Background.*$)', '0')
-    dfNew['LabelDisc'] = dfNew.LabelDisc.str.replace(r'(^.*Normal.*$)', '0')
-    dfNew['LabelDisc'] = dfNew.LabelDisc.str.replace(r'(^.*Botnet.*$)', '1')
+    dfNew['LabelDisc'] = dfNew.LabelDisc.replace(r'(^.*Background.*$)', '0')
+    dfNew['LabelDisc'] = dfNew.LabelDisc.replace(r'(^.*Normal.*$)', '0')
+    dfNew['LabelDisc'] = dfNew.LabelDisc.replace(r'(^.*Botnet.*$)', '1')
     
     
     return dfNew
