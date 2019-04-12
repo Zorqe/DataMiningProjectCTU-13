@@ -4,6 +4,7 @@ import pickle
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier, AdaBoostClassifier
 from sklearn.svm import LinearSVC
 from sklearn import tree
+from sklearn.ensemble import GradientBoostingClassifier
 
 """
 Input: Processed training data (local directory)
@@ -38,7 +39,8 @@ train_labels = train_data_labels[0::,0]
 models = [
         ["adaBoostModel", AdaBoostClassifier(RandomForestClassifier(n_estimators = 1000), algorithm="SAMME", n_estimators=500)],
         ["LinearSVCModel", LinearSVC(max_iter=4000)],
-        ["CART", tree.DecisionTreeClassifier()]
+        ["CART", tree.DecisionTreeClassifier()],
+        ["GradientBoost", GradientBoostingClassifier()]
         ]
 
 #Training on all models and saving them locally
