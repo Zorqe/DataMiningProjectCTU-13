@@ -259,10 +259,23 @@ def modifyMergedData(dataf):
 #Have all files to clean,discretize,featuregenerate in local directory
 #Getting all .csv files(local directory) to be feature generated
 localFiles = [file for file in os.listdir('.') if file.endswith(".csv")]
+
+if len(localFiles) == 0:
+    print("No files to process. Exiting.")
+    exit()
+
+testingIndexes = []
+try:
+    # If these files are found, put them in testing data
 testingIndex1 = localFiles.index("capture20110817.csv")        #index of testing scenario 9
 testingIndex2 = localFiles.index("capture20110818.csv")        #index of testing scenario 10
+    testingIndexes = [testingIndex1, testingIndex2]
+except ValueError:
+    # Only create training data
+    pass
 
-#Perform preprocessing, discretizing, and feature generation on each file seperately
+
+# Perform preprocessing, discretizing, and feature generation on each file seperately
 processedDataTraining = []
 processedDataTesting = []
 for scenarioNum,file in enumerate(localFiles):
@@ -281,34 +294,29 @@ for scenarioNum,file in enumerate(localFiles):
     dataFrame = generateSrcAddrFeaturesConnectionBased(dataFrame,10000)
     dataFrame = adjustFeatures(dataFrame)
 
-    if ( (scenarioNum != testingIndex1) and (scenarioNum != testingIndex2) ):
-        #Training set
-        processedDataTraining.append(dataFrame)
-    else:
+    if scenarioNum in testingIndexes:
         #Testing set
         processedDataTesting.append(dataFrame)
+    else:
+        #Training set
+        processedDataTraining.append(dataFrame)
 
-#Merge the data as follows
-#Training: scenario 1 to 8 and 11 to 13
-#Testing: scenario 9 to 10
-print("Merging scenarios into train and test sets...")
-dfOutTraining = pd.concat(processedDataTraining)
-dfOutTesting = pd.concat(processedDataTesting)
+def writeToDisk(filename, data):
+    print("Merging scenario", filename)
+    dfOut = pd.concat(data)
+    del data
 
-#Final adjustment on merged data to allow for a common quantile scale
-print("Adjusting merged data")
-dfOutTraining = modifyMergedData(dfOutTraining)
-dfOutTesting = modifyMergedData(dfOutTesting)
+    print("Adjusting merged data for", filename)
+    modifyMergedData(dfOut)
+
+    dfOut.to_csv(filename, encoding='utf-8', index=False)
+    print(filename + " Created")
+
 
 #--------------------Outputting files--------------------------
 dataFrameOutDir = Path("Output")
 dataFrameOutDir.mkdir(parents=True, exist_ok=True)
 
-dataframeOutNameTrain = "finalTrainingData.csv"
-dataframeOutNameTest = "finalTestingData.csv"
-
-dfOutTraining.to_csv(dataFrameOutDir / dataframeOutNameTrain, encoding='utf-8', index=False)
-print(dataframeOutNameTrain + " Created")
-
-dfOutTesting.to_csv(dataFrameOutDir / dataframeOutNameTest, encoding='utf-8', index=False)
-print(dataframeOutNameTest + " Created")
+writeToDisk(dataFrameOutDir / "finalTrainingData.csv", processedDataTraining)
+if len(processedDataTesting) > 0:
+    writeToDisk(dataFrameOutDir / "finalTestingData.csv", processedDataTesting)
