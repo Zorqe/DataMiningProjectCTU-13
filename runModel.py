@@ -4,6 +4,7 @@ import pickle
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier, AdaBoostClassifier
 from sklearn.svm import LinearSVC
 from sklearn.metrics import classification_report
+from sklearn.metrics import accuracy_score
 
 """
 Input: Processed testing data (local directory) and the trained models
@@ -27,7 +28,10 @@ test_dataFrame = test_dataFrame.drop(['LabelDisc'], axis=1)
 
 #Getting vals to use for testing
 test_data = test_dataFrame.values
+test_data_class = test_dataFrame_Classification.values
+
 test_features = test_data[0::]
+test_results = test_data_class[0::,0]
 
 #Testing
 modelFileNames = ["adaBoostModel.pkl","LinearSVCModel.pkl"]
@@ -41,4 +45,5 @@ for model_filename in modelFileNames:
     predictionClassification = model.predict(test_features)
 
     print("Scikit-learn classification report: ")
-    print(classification_report(test_dataFrame_Classification.LabelDisc, predictionClassification))  
+    print(classification_report(test_dataFrame_Classification.LabelDisc, predictionClassification))
+    print ('Accuracy = ' + str(accuracy_score(test_results, predictionClassification)) )
