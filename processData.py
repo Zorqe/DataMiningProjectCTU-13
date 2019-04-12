@@ -214,8 +214,9 @@ def adjustFeatures(df):
     #Removing invalid entries that've been converted to NaN
     df = deleteNullRow(df,'Sport')
     df = deleteNullRow(df,'Sport')
+    df = df.dropna()
 
-    stringColsToMap = ['State','TotBytesDisc','SrcBytesDisc','SportDisc','DportDisc','Src_TotBytesDisc_mode','Dst_TotBytesDisc_mode']
+    stringColsToMap = ['TotBytesDisc','SrcBytesDisc','SportDisc','DportDisc','Src_TotBytesDisc_mode','Dst_TotBytesDisc_mode']
     for col in stringColsToMap:
         LE = LabelEncoder()
         df[col] = LE.fit_transform(df[col])
@@ -234,14 +235,14 @@ def modifyMergedData(dataf):
     #Note: State is dropped and not recomputed --> Is not used for training
     colsToDrop = ["State","TotBytesDisc","SrcBytesDisc","SportDisc","SportDisc","DportDisc","Src_TotBytesDisc_mode","Dst_TotBytesDisc_mode"]
 
-    dataFrame.drop(colsToDrop, axis=1, inplace=True)
+    dataFrame.drop(colsToDrop, axis=1, inplace=True, errors="ignore")
 
     quantile_list = [0, .25, .5, .75, 1.] # Change the quantile_list for more or less accuracy
 
     dataFrame['TotBytesDisc'] = ""
     dataFrame['SrcBytesDisc'] = ""
-    dataFrame['TotBytesDisc'] = pd.qcut(dataFrame['TotBytes'], quantile_list)
-    dataFrame['SrcBytesDisc'] = pd.qcut(dataFrame['SrcBytes'], quantile_list)
+    dataFrame['TotBytesDisc'] = pd.qcut(dataFrame['TotBytes'], quantile_list, duplicates='drop')
+    dataFrame['SrcBytesDisc'] = pd.qcut(dataFrame['SrcBytes'], quantile_list, duplicates='drop')
 
     #Label encode discretized byte vals
     le = preprocessing.LabelEncoder()
