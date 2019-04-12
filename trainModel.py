@@ -3,6 +3,7 @@ import os
 import pickle
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier, AdaBoostClassifier
 from sklearn.svm import LinearSVC
+from sklearn import tree
 
 """
 Input: Processed training data (local directory)
@@ -34,22 +35,22 @@ train_labels = train_data_labels[0::,0]
 
 
 #Creating all models to be trained on (except KNN)
-models = [AdaBoostClassifier(RandomForestClassifier(n_estimators = 1000),
-                        algorithm="SAMME", n_estimators=500),
-                        LinearSVC(max_iter=4000)]
-
-#Save file names
-modelNames = ["adaBoostModel","LinearSVCModel"]
+models = [
+        ["adaBoostModel", AdaBoostClassifier(RandomForestClassifier(n_estimators = 1000), algorithm="SAMME", n_estimators=500)],
+        ["LinearSVCModel", LinearSVC(max_iter=4000)],
+        ["CART", tree.DecisionTreeClassifier()]
+        ]
 
 #Training on all models and saving them locally
-for i, modelToTrain in enumerate(models):
-    print("\n\nModel training for model " + modelNames[i] + "...")
-    model = modelToTrain
+for modelToTrain in models:
+    modelName = modelToTrain[0]
+    model = modelToTrain[1]
+    print("\n\nModel training for model " + modelName + "...")
     
     #Fit the training data to the model
     model = model.fit(train_features, train_labels)
 
-    print("Saving model "+modelNames[i] + "...")
-    model_filename = modelNames[i]+".pkl"
+    print("Saving model "+ modelName + "...")
+    model_filename = modelName + ".pkl"
     with open(model_filename, 'wb') as file:  
         pickle.dump(model, file)
