@@ -92,14 +92,18 @@ def discretizeData(dataFrame):
     #              1024-49151(REGISTERED_PORTNUMBER)
     #              49152-65535(DYNAMIC_PORTNUMBER)
     Sport = dataFrame['Sport']#[0x0303].astype('int64')
-    Sport = Sport.apply(lambda x: int(x, 16) if x[0] == '0' and x[1] == 'x' else int(x, 10)) # TODO, there has to be better way
+    if(Sport.dtype != 'int64'):
+        Sport = Sport.apply(lambda x: int(x, 0)) # 0 as base means 10 will be converted to 10 and 0x10 will be converted to 16
+
     dfNew['SportDisc'] = ""
-    dfNew['SportDisc'] = pd.cut(Sport, [0, 1023, 49151, 65535])
+    dfNew['SportDisc'] = pd.cut(Sport, [0, 1023, 49151, 65535], duplicates='drop')
     
     Dport = dataFrame['Dport']#[0x0303].astype('int64')
-    Dport = Dport.apply(lambda x: int(x, 16) if x[0] == '0' and x[1] == 'x' else int(x, 10))
+    if(Dport.dtype != 'int64'):
+        Dport = Dport.apply(lambda x: int(x, 0))
+
     dfNew['DportDisc'] = ""
-    dfNew['DportDisc'] = pd.cut(Dport, [0, 1023, 49151, 65535])
+    dfNew['DportDisc'] = pd.cut(Dport, [0, 1023, 49151, 65535], duplicates='drop')
 
     
     #LabelEncoder for unique values for Proto column and stored as column ProtoDisc
@@ -267,8 +271,8 @@ if len(localFiles) == 0:
 testingIndexes = []
 try:
     # If these files are found, put them in testing data
-testingIndex1 = localFiles.index("capture20110817.csv")        #index of testing scenario 9
-testingIndex2 = localFiles.index("capture20110818.csv")        #index of testing scenario 10
+    testingIndex1 = localFiles.index("capture20110817.csv")        #index of testing scenario 9
+    testingIndex2 = localFiles.index("capture20110818.csv")        #index of testing scenario 10
     testingIndexes = [testingIndex1, testingIndex2]
 except ValueError:
     # Only create training data
