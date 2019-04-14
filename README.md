@@ -2,12 +2,14 @@ Zaid Khalid
 Dan Sirbu
 
 Google Drive File Download Link:
-https://drive.google.com/drive/folders/1LVsQYQ1CnXUUGXktTM5qzIxgIuZJdSjI?usp=sharing
+https://drive.google.com/drive/folders/114W78sGZ_F3vhY6IK1YwFu8GnXDMX5ty?usp=sharing
 
 Includes:
     - finalTestingData.csv        (csv with the feature generated test data)
     - finalTrainingData.csv       (csv with the feature generated train data)
-    - adaBoostModel.pkl     (Trained adaBoostModel)
+    - adaBoostModel.pkl           (Trained adaBoostModel)
+    - testingDataUNB.csv          (UNB malware dataset converted into the CTU dataset format)
+    - testingDataUNB.csv          (UNB malware dataset with only the Neris and Rbot botnets)
 
 CTU-13 training set has bots:
     - Neris
