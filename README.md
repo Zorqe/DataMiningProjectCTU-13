@@ -9,7 +9,7 @@ Includes:
     - finalTrainingData.csv       (csv with the feature generated train data)
     - adaBoostModel.pkl           (Trained adaBoostModel)
     - testingDataUNB.csv          (UNB malware dataset converted into the CTU dataset format)
-    - testingDataUNB.csv          (UNB malware dataset with only the Neris and Rbot botnets)
+    - testingDataUNB-filtered.csv          (UNB malware dataset with only the Neris and Rbot botnets)
 
 CTU-13 training set has bots:
     - Neris
